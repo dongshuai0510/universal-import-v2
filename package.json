@@ -1,0 +1,40 @@
+{
+  "name": "universal-import-v2",
+  "version": "2.0.0",
+  "private": true,
+  "description": "万能导入 V2 — 智能表格批量下单系统（大模型解析 + 高性能流式导入）",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "gen:bigfile": "node scripts/gen-bigfile.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@neondatabase/serverless": "^0.10.4",
+    "better-sqlite3": "^11.8.1",
+    "exceljs": "^4.4.0",
+    "mammoth": "^1.9.0",
+    "nanoid": "^5.0.9",
+    "next": "^15.5.19",
+    "pdf-parse": "^1.1.1",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.10.7",
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.5.1",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.22.4",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "name": "欢乐牧场-转置门店列",
+  "kind": "excel",
+  "sheets": "all",
+  "perSheetOrder": false,
+  "aggregateBy": "externalCode",
+  "blocks": [
+    {
+      "type": "transpose",
+      "headerRow": 0,
+      "dataStartRow": 1,
+      "storeColStart": 13,
+      "storeColEnd": 17,
+      "skipEmptyOrZero": true
+    }
+  ],
+  "fieldMappings": [
+    { "field": "externalCode", "source": { "from": "transposeHeader" } },
+    { "field": "receiverStore", "source": { "from": "transposeHeader" } },
+    { "field": "quantity", "source": { "from": "transposeValue" } },
+    { "field": "skuCode", "source": { "from": "column", "col": 4 } },
+    { "field": "skuName", "source": { "from": "column", "col": 2 } },
+    { "field": "spec", "source": { "from": "column", "col": 7 } }
+  ]
+}

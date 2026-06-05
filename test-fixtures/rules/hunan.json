@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "name": "湖南仓-汇总单宽表",
+  "kind": "excel",
+  "sheets": "all",
+  "perSheetOrder": false,
+  "aggregateBy": "externalCode",
+  "blocks": [
+    {
+      "type": "table",
+      "headerRow": 1,
+      "dataStartRow": 2,
+      "skipRowIfContains": ["合计"]
+    }
+  ],
+  "fieldMappings": [
+    { "field": "externalCode", "source": { "from": "column", "col": 1 } },
+    { "field": "receiverStore", "source": { "from": "column", "col": 0 } },
+    { "field": "skuCode", "source": { "from": "column", "col": 5 } },
+    { "field": "skuName", "source": { "from": "column", "col": 6 } },
+    { "field": "spec", "source": { "from": "column", "col": 8 } },
+    { "field": "quantity", "source": { "from": "column", "col": 12 } },
+    { "field": "receiverName", "source": { "from": "column", "col": 26 } },
+    { "field": "receiverPhone", "source": { "from": "column", "col": 27 } },
+    { "field": "receiverAddress", "source": { "from": "column", "col": 28 } }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "name": "黔寨寨配送单PDF",
+  "kind": "pdf",
+  "sheets": "all",
+  "perSheetOrder": false,
+  "aggregateBy": "externalCode",
+  "blocks": [
+    {
+      "type": "keyValue",
+      "extracts": [
+        { "key": "externalCode", "labels": ["单据编号"], "valueAt": "inline" },
+        { "key": "store", "labels": ["收货机构"], "valueAt": "inline" },
+        { "key": "name", "labels": ["收货人"], "valueAt": "inline" },
+        { "key": "phone", "labels": ["收货电话"], "valueAt": "inline" },
+        { "key": "addr", "labels": ["收货地址"], "valueAt": "inline" }
+      ]
+    },
+    {
+      "type": "pdfRow",
+      "skuCodePattern": "ZBWP\\d+",
+      "skipRowIfContains": ["物品类别", "第", "合计"]
+    }
+  ],
+  "fieldMappings": [
+    { "field": "externalCode", "source": { "from": "shared", "key": "externalCode" } },
+    { "field": "receiverStore", "source": { "from": "shared", "key": "store" } },
+    { "field": "receiverName", "source": { "from": "shared", "key": "name" } },
+    { "field": "receiverPhone", "source": { "from": "shared", "key": "phone" } },
+    { "field": "receiverAddress", "source": { "from": "shared", "key": "addr" } }
+  ]
+}

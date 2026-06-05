@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "name": "配送发货单(宽表+头部键值)",
+  "kind": "excel",
+  "sheets": "all",
+  "perSheetOrder": false,
+  "aggregateBy": "externalCode",
+  "blocks": [
+    {
+      "type": "keyValue",
+      "extracts": [
+        { "key": "externalCode", "labels": ["单据号"], "valueAt": "right" },
+        { "key": "store", "labels": ["收货机构"], "valueAt": "right" },
+        { "key": "name", "labels": ["收货人"], "valueAt": "right" },
+        { "key": "phone", "labels": ["收货电话"], "valueAt": "right" },
+        { "key": "addr", "labels": ["收货地址"], "valueAt": "right" }
+      ]
+    },
+    {
+      "type": "table",
+      "headerRow": 3,
+      "dataStartRow": 4,
+      "dataEndRow": 6,
+      "skipRowIfContains": ["合计"]
+    }
+  ],
+  "fieldMappings": [
+    { "field": "externalCode", "source": { "from": "shared", "key": "externalCode" } },
+    { "field": "receiverStore", "source": { "from": "shared", "key": "store" } },
+    { "field": "receiverName", "source": { "from": "shared", "key": "name" } },
+    { "field": "receiverPhone", "source": { "from": "shared", "key": "phone" } },
+    { "field": "receiverAddress", "source": { "from": "shared", "key": "addr" } },
+    { "field": "skuCode", "source": { "from": "column", "col": 2 } },
+    { "field": "skuName", "source": { "from": "column", "col": 3 } },
+    { "field": "spec", "source": { "from": "column", "col": 5 } },
+    { "field": "quantity", "source": { "from": "column", "col": 14 } }
+  ]
+}

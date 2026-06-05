@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "name": "门店调拨单-卡片式",
+  "kind": "excel",
+  "sheets": "all",
+  "perSheetOrder": false,
+  "aggregateBy": "externalCode",
+  "blocks": [
+    {
+      "type": "cardRepeat",
+      "cardDelimiterContains": "▶",
+      "extracts": [
+        { "key": "store", "labels": ["调入门店"], "valueAt": "right" },
+        { "key": "name", "labels": ["收货人"], "valueAt": "right" },
+        { "key": "phone", "labels": ["电话"], "valueAt": "right" },
+        { "key": "addr", "labels": ["收货地址"], "valueAt": "right" }
+      ],
+      "itemHeaderContains": ["物品编码", "物品名称"]
+    }
+  ],
+  "fieldMappings": [
+    { "field": "externalCode", "source": { "from": "shared", "key": "store" } },
+    { "field": "receiverStore", "source": { "from": "shared", "key": "store" } },
+    { "field": "receiverName", "source": { "from": "shared", "key": "name" } },
+    { "field": "receiverPhone", "source": { "from": "shared", "key": "phone" } },
+    { "field": "receiverAddress", "source": { "from": "shared", "key": "addr" } },
+    { "field": "skuCode", "source": { "from": "column", "col": 0 } },
+    { "field": "skuName", "source": { "from": "column", "col": 1 } },
+    { "field": "spec", "source": { "from": "column", "col": 2 } },
+    { "field": "quantity", "source": { "from": "column", "col": 3 } }
+  ]
+}
