@@ -2,12 +2,13 @@
 
 ## 选用模型
 
-本系统使用 **Claude（Anthropic）**，默认模型 `claude-opus-4-8`，可通过环境变量
-`ANTHROPIC_MODEL` 覆盖（如换成 `claude-sonnet-4-6` 降本提速）。
+本系统使用 **Claude（Anthropic）**，默认模型 `claude-sonnet-4-6`，可通过环境变量
+`ANTHROPIC_MODEL` 覆盖。规则生成是结构化任务，Sonnet 速度快（宽表约 26s）、能力足够；
+Opus 在 40 列宽表 + 置信度标注时可能超过 Serverless 60s 上限，故生产默认 Sonnet。
 
-调用点只有一处：`POST /api/generate-rule` → `src/lib/llm.ts` 的 `generateRule()`。
-全流程中 LLM **仅被调用一次**，用于把文件结构样本转成 ParseRule。后续全量数据处理、
-校验、入库都不经过 LLM。
+支持官方 Anthropic 或 **Anthropic 兼容中转**（如 vbcode.io）。中转需用
+`ANTHROPIC_AUTH_TOKEN` + `ANTHROPIC_BASE_URL`，代码会自动改用 `Authorization: Bearer` +
+浏览器 UA 以绕过中转前置的 Cloudflare 校验。
 
 ## Key 配置
 
