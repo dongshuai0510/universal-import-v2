@@ -47,7 +47,17 @@ export async function parseExcel(
 ): Promise<ExtractedDocument> {
   const ExcelJS = (await import("exceljs")).default;
   const wb = new ExcelJS.Workbook();
-  await wb.xlsx.load(buffer as unknown as ArrayBuffer);
+  try {
+    await wb.xlsx.load(buffer as unknown as ArrayBuffer);
+  } catch (e) {
+    const msg = (e as Error).message ?? "";
+    if (msg.includes("central directory") || msg.includes("zip")) {
+      throw new Error(
+        "该文件不是有效的 .xlsx（可能是旧版 .xls 二进制格式或已损坏）。请在 Excel 中“另存为”.xlsx 后重试。"
+      );
+    }
+    throw e;
+  }
 
   const sheets: SheetGrid[] = [];
   wb.eachSheet((ws) => {

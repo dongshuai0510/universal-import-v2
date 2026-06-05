@@ -90,7 +90,23 @@ export async function generateRule(sampleText: string): Promise<GenResult> {
     };
 
   const baseURL = process.env.ANTHROPIC_BASE_URL || undefined;
-  const client = new Anthropic({ apiKey, baseURL });
+  // 中转服务（如 vbcode.io）由 Cloudflare 保护：需用 Authorization: Bearer +
+  // 浏览器 UA 才能放行（默认的 x-api-key + SDK UA 会被 403 拦截）。
+  // 官方 Anthropic 端点不受影响。
+  const isRelay = !!baseURL;
+  const client = new Anthropic({
+    apiKey,
+    baseURL,
+    ...(isRelay
+      ? {
+          defaultHeaders: {
+            Authorization: `Bearer ${apiKey}`,
+            "user-agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+          },
+        }
+      : {}),
+  });
   const userMsg = `这是待解析文件的结构样本，请生成 ParseRule JSON：\n\n${sampleText}`;
 
   let lastRaw = "";
