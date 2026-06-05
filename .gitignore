@@ -37,3 +37,5 @@ next-env.d.ts
 
 # generated big test files
 /tmp-bigfile*.xlsx
+
+.vercel

@@ -77,10 +77,20 @@ export interface GenResult {
 }
 
 export async function generateRule(sampleText: string): Promise<GenResult> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return { raw: "", error: "未配置 ANTHROPIC_API_KEY" };
+  // 支持官方 Anthropic 或兼容中转（如 vbcode.io）：
+  //   ANTHROPIC_API_KEY      官方 key
+  //   ANTHROPIC_AUTH_TOKEN   中转 token（与 base_url 搭配）
+  //   ANTHROPIC_BASE_URL     中转地址（如 https://www.vbcode.io）
+  const apiKey =
+    process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN;
+  if (!apiKey)
+    return {
+      raw: "",
+      error: "未配置 ANTHROPIC_API_KEY / ANTHROPIC_AUTH_TOKEN",
+    };
 
-  const client = new Anthropic({ apiKey });
+  const baseURL = process.env.ANTHROPIC_BASE_URL || undefined;
+  const client = new Anthropic({ apiKey, baseURL });
   const userMsg = `这是待解析文件的结构样本，请生成 ParseRule JSON：\n\n${sampleText}`;
 
   let lastRaw = "";
