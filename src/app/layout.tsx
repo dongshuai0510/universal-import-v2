@@ -30,6 +30,20 @@ export default function RootLayout({
             <span className="badge ml-2 bg-brand-50 text-brand-700">
               大模型驱动
             </span>
+            <nav className="ml-auto flex gap-1 text-sm">
+              <a
+                href="/"
+                className="rounded-lg px-3 py-1.5 text-slate-600 hover:bg-slate-100"
+              >
+                导入
+              </a>
+              <a
+                href="/rules"
+                className="rounded-lg px-3 py-1.5 text-slate-600 hover:bg-slate-100"
+              >
+                规则管理
+              </a>
+            </nav>
           </div>
         </header>
         <main className="mx-auto max-w-7xl px-6 py-6">{children}</main>

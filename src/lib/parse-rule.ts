@@ -59,6 +59,15 @@ export type ValueSource = z.infer<typeof ValueSourceSchema>;
 export const FieldMappingSchema = z.object({
   field: z.enum(ORDER_FIELDS),
   source: ValueSourceSchema,
+  /**
+   * 置信度：AI 生成规则时标注该映射的确定程度。
+   *  - "certain"：明确（如表头精确匹配到的列）
+   *  - "guessed"：推测（列含义不明确、靠位置/语义猜的），需用户确认
+   * 用户手动确认后应改为 certain。缺省视为 certain（手写规则）。
+   */
+  confidence: z.enum(["certain", "guessed"]).optional(),
+  /** AI 对该推测的简短理由（仅 guessed 时有意义，供用户判断） */
+  note: z.string().optional(),
 });
 export type FieldMapping = z.infer<typeof FieldMappingSchema>;
 

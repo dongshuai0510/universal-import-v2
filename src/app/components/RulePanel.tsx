@@ -102,6 +102,8 @@ export function RulePanel({
         </pre>
       )}
 
+      <GuessedMappings rule={rule} />
+
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
@@ -120,6 +122,32 @@ export function RulePanel({
         <button className="btn-ghost" disabled={busy} onClick={saveRule}>
           保存规则复用
         </button>
+      </div>
+    </div>
+  );
+}
+
+/** 展示 AI 标注为"推测"的字段映射，提示用户确认（模块一要求）。 */
+function GuessedMappings({ rule }: { rule: unknown }) {
+  const r = rule as {
+    fieldMappings?: { field: string; confidence?: string; note?: string }[];
+  };
+  const guessed = (r?.fieldMappings ?? []).filter(
+    (m) => m.confidence === "guessed"
+  );
+  if (!guessed.length) return null;
+  return (
+    <div className="mb-3 card border-amber-200 bg-amber-50 p-3">
+      <div className="mb-1 flex items-center gap-1.5 text-sm font-medium text-amber-800">
+        <span>⚠️ AI 推测的映射（{guessed.length} 项，请确认）</span>
+      </div>
+      <div className="space-y-0.5 text-xs text-amber-700">
+        {guessed.map((m, i) => (
+          <div key={i}>
+            · <span className="font-medium">{m.field}</span>
+            {m.note ? `：${m.note}` : "（含义不确定，请核对下方 JSON）"}
+          </div>
+        ))}
       </div>
     </div>
   );
