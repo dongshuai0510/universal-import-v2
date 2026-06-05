@@ -47,8 +47,8 @@ export interface Db {
   }): Promise<SavedRule>;
   deleteRule(id: string): Promise<void>;
   // orders
-  listOrders(limit?: number, offset?: number): Promise<SavedOrder[]>;
-  countOrders(): Promise<number>;
+  listOrders(opts?: OrderQuery): Promise<SavedOrder[]>;
+  countOrders(opts?: OrderQuery): Promise<number>;
   /** 已存在的外部编码集合（用于去重/比对） */
   existingCodes(codes: string[]): Promise<Set<string>>;
   /** 批量插入；返回 {inserted, skipped} */
@@ -56,6 +56,20 @@ export interface Db {
     orders: AggregatedOrder[],
     sourceFile: string
   ): Promise<{ inserted: number; skipped: number }>;
+}
+
+/** 运单查询条件（模块五：按外部编码/收件人/时间筛选 + 分页） */
+export interface OrderQuery {
+  limit?: number;
+  offset?: number;
+  /** 按外部编码模糊匹配 */
+  code?: string;
+  /** 按收件人姓名模糊匹配 */
+  receiver?: string;
+  /** 提交时间起（ISO，含） */
+  from?: string;
+  /** 提交时间止（ISO，含） */
+  to?: string;
 }
 
 let _db: Db | null = null;

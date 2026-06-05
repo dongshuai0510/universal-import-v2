@@ -19,16 +19,23 @@ const OVERSCAN = 8;
 
 /**
  * 虚拟滚动 + 行内可编辑表格。只渲染可视区域的行，10万行也流畅（考点4）。
- * 错误单元格高亮红色，回车/失焦提交编辑。
+ * 错误单元格红色高亮；外部编码重复黄色高亮（warn）。支持删除行/新增空行。
  */
 export function VirtualTable({
   lines,
   errors,
+  dupCodes,
   onEdit,
+  onDeleteRow,
+  onAddRow,
 }: {
   lines: OrderLine[];
   errors: RowError[];
+  /** 需要黄色高亮的重复外部编码集合 */
+  dupCodes?: Set<string>;
   onEdit: (rowIndex: number, field: keyof OrderLine, value: string) => void;
+  onDeleteRow?: (rowIndex: number) => void;
+  onAddRow?: () => void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
@@ -43,7 +50,6 @@ export function VirtualTable({
     return () => el.removeEventListener("scroll", onScroll);
   }, []);
 
-  // 按 行号 → 出错字段集合
   const errMap = useCallback(() => {
     const m = new Map<string, Set<string>>();
     for (const e of errors) {
@@ -60,13 +66,26 @@ export function VirtualTable({
   const visible = [];
   for (let i = start; i < end; i++) visible.push(i);
 
-  const totalW = COLS.reduce((a, c) => a + c.w, 0) + 50;
+  const totalW = COLS.reduce((a, c) => a + c.w, 0) + 50 + 56;
 
   return (
     <div className="card overflow-hidden">
+      {onAddRow && (
+        <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-3 py-2">
+          <span className="text-xs text-slate-400">
+            共 {total.toLocaleString()} 行 · 黄色=外部编码重复 · 红色=校验错误
+          </span>
+          <button
+            className="btn-ghost px-2.5 py-1 text-xs"
+            onClick={onAddRow}
+          >
+            + 新增空行
+          </button>
+        </div>
+      )}
       <div className="overflow-x-auto">
         <div style={{ minWidth: totalW }}>
-          {/* 表头 */}
+          {/* 表头（固定） */}
           <div className="flex border-b border-slate-200 bg-slate-50 text-xs font-medium text-slate-500">
             <div className="shrink-0 px-2 py-2" style={{ width: 50 }}>
               #
@@ -80,6 +99,9 @@ export function VirtualTable({
                 {c.label}
               </div>
             ))}
+            <div className="shrink-0 px-2 py-2" style={{ width: 56 }}>
+              操作
+            </div>
           </div>
           {/* 虚拟体 */}
           <div
@@ -95,11 +117,18 @@ export function VirtualTable({
                 }`;
                 const badFields = errMap.get(rowKey);
                 const hasErr = !!badFields?.size;
+                const isDup =
+                  !!dupCodes && !!line.externalCode &&
+                  dupCodes.has(line.externalCode);
                 return (
                   <div
                     key={i}
                     className={`absolute left-0 flex border-b border-slate-100 text-xs ${
-                      hasErr ? "bg-red-50/60" : "hover:bg-slate-50"
+                      hasErr
+                        ? "bg-red-50/60"
+                        : isDup
+                        ? "bg-amber-50/60"
+                        : "hover:bg-slate-50"
                     }`}
                     style={{ top: i * ROW_H, height: ROW_H }}
                   >
@@ -110,9 +139,13 @@ export function VirtualTable({
                       {i + 1}
                     </div>
                     {COLS.map((c) => {
-                      const bad = badFields?.has(c.key) ||
-                        (c.key === "receiverName" && badFields?.has("receiver")) ||
-                        (c.key === "receiverPhone" && badFields?.has("receiver"));
+                      const bad =
+                        badFields?.has(c.key) ||
+                        (c.key === "receiverName" &&
+                          badFields?.has("receiver")) ||
+                        (c.key === "receiverPhone" &&
+                          badFields?.has("receiver"));
+                      const dupCell = isDup && c.key === "externalCode";
                       const v = line[c.key];
                       return (
                         <div
@@ -122,9 +155,7 @@ export function VirtualTable({
                         >
                           <input
                             defaultValue={v == null ? "" : String(v)}
-                            onBlur={(e) =>
-                              onEdit(i, c.key, e.target.value)
-                            }
+                            onBlur={(e) => onEdit(i, c.key, e.target.value)}
                             onKeyDown={(e) => {
                               if (e.key === "Enter")
                                 (e.target as HTMLInputElement).blur();
@@ -132,12 +163,28 @@ export function VirtualTable({
                             className={`w-full rounded px-1.5 py-1 outline-none ${
                               bad
                                 ? "bg-red-100 ring-1 ring-red-400 text-red-700"
+                                : dupCell
+                                ? "bg-amber-100 ring-1 ring-amber-400 text-amber-800"
                                 : "bg-transparent focus:bg-white focus:ring-1 focus:ring-brand-400"
                             }`}
                           />
                         </div>
                       );
                     })}
+                    <div
+                      className="flex shrink-0 items-center px-2"
+                      style={{ width: 56 }}
+                    >
+                      {onDeleteRow && (
+                        <button
+                          className="text-slate-300 hover:text-red-500"
+                          title="删除该行"
+                          onClick={() => onDeleteRow(i)}
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
                   </div>
                 );
               })}

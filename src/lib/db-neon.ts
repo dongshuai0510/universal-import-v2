@@ -70,17 +70,35 @@ export function createNeonDb(url: string): Db {
       await sql`DELETE FROM parse_rules WHERE id=${id}`;
     },
 
-    async listOrders(limit = 100, offset = 0) {
+    async listOrders(opts = {}) {
+      const limit = Math.min(500, opts.limit ?? 100);
+      const offset = opts.offset ?? 0;
+      const code = opts.code ? `%${opts.code}%` : null;
+      const receiver = opts.receiver ? `%${opts.receiver}%` : null;
+      const from = opts.from ?? null;
+      const to = opts.to ?? null;
       const rows = (await sql`
         SELECT * FROM import_orders
+        WHERE (${code}::text IS NULL OR external_code ILIKE ${code})
+          AND (${receiver}::text IS NULL OR receiver_name ILIKE ${receiver})
+          AND (${from}::timestamptz IS NULL OR created_at >= ${from}::timestamptz)
+          AND (${to}::timestamptz IS NULL OR created_at <= ${to}::timestamptz)
         ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}
       `) as Record<string, unknown>[];
       return rows.map(rowToOrder);
     },
 
-    async countOrders() {
+    async countOrders(opts = {}) {
+      const code = opts.code ? `%${opts.code}%` : null;
+      const receiver = opts.receiver ? `%${opts.receiver}%` : null;
+      const from = opts.from ?? null;
+      const to = opts.to ?? null;
       const rows = (await sql`
         SELECT COUNT(*)::int AS n FROM import_orders
+        WHERE (${code}::text IS NULL OR external_code ILIKE ${code})
+          AND (${receiver}::text IS NULL OR receiver_name ILIKE ${receiver})
+          AND (${from}::timestamptz IS NULL OR created_at >= ${from}::timestamptz)
+          AND (${to}::timestamptz IS NULL OR created_at <= ${to}::timestamptz)
       `) as { n: number }[];
       return rows[0]?.n ?? 0;
     },

@@ -46,6 +46,23 @@ export default function Home() {
     []
   );
 
+  const onDeleteRow = useCallback((rowIndex: number) => {
+    setLines((prev) => prev.filter((_, i) => i !== rowIndex));
+  }, []);
+
+  let manualSeq = 0;
+  const onAddRow = useCallback(() => {
+    setLines((prev) => [
+      ...prev,
+      {
+        externalCode: "",
+        skuName: "",
+        quantity: null,
+        source: { sheet: "manual", row: 100000 + prev.length + manualSeq++ },
+      },
+    ]);
+  }, []);
+
   return (
     <div className="space-y-5">
       {/* 步骤指示 */}
@@ -108,6 +125,8 @@ export default function Home() {
           file={file}
           rule={rule}
           onEdit={onEdit}
+          onDeleteRow={onDeleteRow}
+          onAddRow={onAddRow}
           busy={busy}
           setBusy={setBusy}
           setMsg={setMsg}

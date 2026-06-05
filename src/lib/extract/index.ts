@@ -17,11 +17,22 @@ export async function extractDocument(
   buffer: Buffer,
   filename: string
 ): Promise<ExtractedDocument> {
+  if (!buffer || buffer.length === 0)
+    throw new Error("文件为空（0 字节），请检查上传的文件。");
   const kind = detectKind(filename);
-  if (kind === "excel") return parseExcel(buffer, filename);
-  if (kind === "word") return parseWord(buffer, filename);
-  if (kind === "pdf") return parsePdf(buffer, filename);
-  throw new Error(`不支持的文件类型：${filename}`);
+  if (!kind)
+    throw new Error(
+      `无法识别的文件类型：${filename}。仅支持 .xlsx/.xls/.docx/.pdf。`
+    );
+  let doc: ExtractedDocument;
+  if (kind === "excel") doc = await parseExcel(buffer, filename);
+  else if (kind === "word") doc = await parseWord(buffer, filename);
+  else doc = await parsePdf(buffer, filename);
+
+  const totalRows = doc.sheets.reduce((a, s) => a + s.rowCount, 0);
+  if (totalRows === 0)
+    throw new Error("文件内容为空，未解析到任何行。");
+  return doc;
 }
 
 export { parseExcel, parseWord, parsePdf };

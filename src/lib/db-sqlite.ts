@@ -3,8 +3,34 @@ import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { nanoid } from "nanoid";
 import type BetterSqlite3 from "better-sqlite3";
-import type { Db, SavedRule, SavedOrder } from "./db";
+import type { Db, SavedRule, SavedOrder, OrderQuery } from "./db";
 import type { AggregatedOrder } from "./types";
+
+/** 构建 WHERE 子句（参数化，防注入） */
+function buildWhere(opts: OrderQuery): { where: string; params: unknown[] } {
+  const conds: string[] = [];
+  const params: unknown[] = [];
+  if (opts.code) {
+    conds.push("external_code LIKE ?");
+    params.push(`%${opts.code}%`);
+  }
+  if (opts.receiver) {
+    conds.push("receiver_name LIKE ?");
+    params.push(`%${opts.receiver}%`);
+  }
+  if (opts.from) {
+    conds.push("created_at >= ?");
+    params.push(opts.from);
+  }
+  if (opts.to) {
+    conds.push("created_at <= ?");
+    params.push(opts.to);
+  }
+  return {
+    where: conds.length ? `WHERE ${conds.join(" AND ")}` : "",
+    params,
+  };
+}
 
 export function createSqliteDb(): Db {
   let db: BetterSqlite3.Database;
@@ -79,19 +105,24 @@ export function createSqliteDb(): Db {
       db.prepare("DELETE FROM parse_rules WHERE id=?").run(id);
     },
 
-    async listOrders(limit = 100, offset = 0) {
+    async listOrders(opts = {}) {
+      const { where, params } = buildWhere(opts);
+      const limit = Math.min(500, opts.limit ?? 100);
+      const offset = opts.offset ?? 0;
       const rows = db
         .prepare(
-          "SELECT * FROM import_orders ORDER BY created_at DESC LIMIT ? OFFSET ?"
+          `SELECT * FROM import_orders ${where}
+           ORDER BY created_at DESC LIMIT ? OFFSET ?`
         )
-        .all(limit, offset) as Record<string, unknown>[];
+        .all(...params, limit, offset) as Record<string, unknown>[];
       return rows.map(rowToOrder);
     },
 
-    async countOrders() {
+    async countOrders(opts = {}) {
+      const { where, params } = buildWhere(opts);
       const r = db
-        .prepare("SELECT COUNT(*) AS n FROM import_orders")
-        .get() as { n: number };
+        .prepare(`SELECT COUNT(*) AS n FROM import_orders ${where}`)
+        .get(...params) as { n: number };
       return r.n;
     },
 
