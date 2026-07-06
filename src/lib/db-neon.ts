@@ -33,6 +33,15 @@ export function createNeonDb(url: string): Db {
           created_at TIMESTAMPTZ NOT NULL DEFAULT now()
         )`;
       await sql`CREATE INDEX IF NOT EXISTS idx_orders_created ON import_orders(created_at DESC)`;
+      // V3 集成：运单异常标记表（V3 回写"该运单存在未关闭异常"，避免 V2 重复发货）
+      await sql`
+        CREATE TABLE IF NOT EXISTS waybill_exception_flags (
+          external_code TEXT PRIMARY KEY,
+          has_open_exception BOOLEAN NOT NULL DEFAULT false,
+          ticket_id TEXT,
+          note TEXT,
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        )`;
     },
 
     async listRules() {
@@ -68,6 +77,41 @@ export function createNeonDb(url: string): Db {
 
     async deleteRule(id) {
       await sql`DELETE FROM parse_rules WHERE id=${id}`;
+    },
+
+    async getOrderByCode(code) {
+      const rows = (await sql`
+        SELECT * FROM import_orders WHERE external_code = ${code}
+      `) as Record<string, unknown>[];
+      return rows[0] ? rowToOrder(rows[0]) : null;
+    },
+
+    async setExceptionFlag(input) {
+      await sql`
+        INSERT INTO waybill_exception_flags
+          (external_code, has_open_exception, ticket_id, note, updated_at)
+        VALUES (${input.externalCode}, ${input.hasOpenException},
+                ${input.ticketId ?? null}, ${input.note ?? null}, now())
+        ON CONFLICT (external_code) DO UPDATE
+          SET has_open_exception = EXCLUDED.has_open_exception,
+              ticket_id = EXCLUDED.ticket_id,
+              note = EXCLUDED.note,
+              updated_at = now()`;
+    },
+
+    async getExceptionFlag(code) {
+      const rows = (await sql`
+        SELECT * FROM waybill_exception_flags WHERE external_code = ${code}
+      `) as Record<string, unknown>[];
+      const r = rows[0];
+      if (!r) return null;
+      return {
+        externalCode: r.external_code as string,
+        hasOpenException: Boolean(r.has_open_exception),
+        ticketId: (r.ticket_id as string) ?? null,
+        note: (r.note as string) ?? null,
+        updatedAt: String(r.updated_at),
+      };
     },
 
     async listOrders(opts = {}) {

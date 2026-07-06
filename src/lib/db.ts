@@ -56,6 +56,23 @@ export interface Db {
     orders: AggregatedOrder[],
     sourceFile: string
   ): Promise<{ inserted: number; skipped: number }>;
+  /** 按外部编码精确获取单条运单（V3 集成接口：运单真实性校验 / 详情） */
+  getOrderByCode(code: string): Promise<SavedOrder | null>;
+  /** 设置/清除运单的“存在未关闭异常”标记（V3 回写接口，可选加分项） */
+  setExceptionFlag(input: {
+    externalCode: string;
+    hasOpenException: boolean;
+    ticketId?: string | null;
+    note?: string | null;
+  }): Promise<void>;
+  /** 读取运单的异常标记（供 V2 运单详情展示“该运单存在未关闭异常”） */
+  getExceptionFlag(code: string): Promise<{
+    externalCode: string;
+    hasOpenException: boolean;
+    ticketId: string | null;
+    note: string | null;
+    updatedAt: string;
+  } | null>;
 }
 
 /** 运单查询条件（模块五：按外部编码/收件人/时间筛选 + 分页） */

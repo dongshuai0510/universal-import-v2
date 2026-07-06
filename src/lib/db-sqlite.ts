@@ -68,6 +68,13 @@ export function createSqliteDb(): Db {
           created_at TEXT NOT NULL
         );
         CREATE INDEX IF NOT EXISTS idx_orders_created ON import_orders(created_at DESC);
+        CREATE TABLE IF NOT EXISTS waybill_exception_flags (
+          external_code TEXT PRIMARY KEY,
+          has_open_exception INTEGER NOT NULL DEFAULT 0,
+          ticket_id TEXT,
+          note TEXT,
+          updated_at TEXT NOT NULL
+        );
       `);
     },
 
@@ -137,6 +144,46 @@ export function createSqliteDb(): Db {
         if (r) set.add(r.external_code);
       }
       return set;
+    },
+
+    async getOrderByCode(code) {
+      const row = db
+        .prepare("SELECT * FROM import_orders WHERE external_code = ?")
+        .get(code) as Record<string, unknown> | undefined;
+      return row ? rowToOrder(row) : null;
+    },
+
+    async setExceptionFlag(input) {
+      db.prepare(
+        `INSERT INTO waybill_exception_flags
+           (external_code, has_open_exception, ticket_id, note, updated_at)
+         VALUES (?,?,?,?,?)
+         ON CONFLICT(external_code) DO UPDATE SET
+           has_open_exception=excluded.has_open_exception,
+           ticket_id=excluded.ticket_id,
+           note=excluded.note,
+           updated_at=excluded.updated_at`
+      ).run(
+        input.externalCode,
+        input.hasOpenException ? 1 : 0,
+        input.ticketId ?? null,
+        input.note ?? null,
+        nowIso()
+      );
+    },
+
+    async getExceptionFlag(code) {
+      const row = db
+        .prepare("SELECT * FROM waybill_exception_flags WHERE external_code = ?")
+        .get(code) as Record<string, unknown> | undefined;
+      if (!row) return null;
+      return {
+        externalCode: row.external_code as string,
+        hasOpenException: Boolean(row.has_open_exception),
+        ticketId: (row.ticket_id as string) ?? null,
+        note: (row.note as string) ?? null,
+        updatedAt: row.updated_at as string,
+      };
     },
 
     async insertOrders(orders, sourceFile) {
